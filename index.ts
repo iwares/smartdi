@@ -1,6 +1,7 @@
 /// <reference path="node_modules/reflect-metadata/index.d.ts" />
 
 export type Class<T> = { new(...args: any[]): T };
+export type AbstractClass<T> = abstract new (...args: any[]) => T;
 
 const $registry = Symbol('registry');
 
@@ -20,13 +21,13 @@ interface RegistryItem {
 
 interface InjectItemObject {
   array: false;
-  clue: string | Class<any>,
+  clue: string | Class<any> | AbstractClass<any>,
   args: any[]
 }
 
 interface InjectItemArray {
   array: true;
-  clue: Class<any>,
+  clue: Class<any> | AbstractClass<any>,
   args: any[]
 }
 
@@ -36,14 +37,14 @@ export abstract class SmartDI {
 
   public static readonly [$registry]: { [key: string]: RegistryItem } = {};
 
-  public static get<T>(clue: Class<T>, ...args: any[]): T;
+  public static get<T>(clue: Class<T> | AbstractClass<T>, ...args: any[]): T;
   public static get<T>(name: string, ...args: any[]): T;
-  public static get<T>(clue: Class<T> | string, ...args: any[]): T {
+  public static get<T>(clue: Class<T> | AbstractClass<T> | string, ...args: any[]): T {
     return SmartDI.internalGet(clue, new Set(), ...args);
   }
 
-  private static internalGet<T>(clue: Class<T> | string, creatings: Set<string>, ...args: any[]): T {
-    let constructor: Class<T> | undefined, name: string;
+  private static internalGet<T>(clue: Class<T> | AbstractClass<T> | string, creatings: Set<string>, ...args: any[]): T {
+    let constructor: Class<T> | AbstractClass<T> | undefined, name: string;
     if (typeof clue === 'function') {
       constructor = clue;
       name = clue.name;
@@ -152,9 +153,9 @@ export function Injectable(options?: InjectableOptions): ClassDecorator {
   }
 }
 
-export function Inject(constructor: Class<any>, ...args: any[]): PropertyDecorator;
+export function Inject(constructor: Class<any> | AbstractClass<any>, ...args: any[]): PropertyDecorator;
 export function Inject(name: string, ...args: any[]): PropertyDecorator;
-export function Inject(clue: Class<any> | string, ...args: any[]): PropertyDecorator {
+export function Inject(clue: Class<any> | AbstractClass<any> | string, ...args: any[]): PropertyDecorator {
   return function (target: Object, prop: string | symbol): void {
     let injects: { [key: string | symbol]: InjectItem } = Reflect.getMetadata('smartdi:injects', target) || {};
     injects[prop] = { array: false, clue, args };
@@ -162,8 +163,8 @@ export function Inject(clue: Class<any> | string, ...args: any[]): PropertyDecor
   }
 }
 
-export function InjectArray(constructor: Class<any>, ...args: any[]): PropertyDecorator;
-export function InjectArray(clue: Class<any>, ...args: any[]): PropertyDecorator {
+export function InjectArray(constructor: Class<any> | AbstractClass<any>, ...args: any[]): PropertyDecorator;
+export function InjectArray(clue: Class<any> | AbstractClass<any>, ...args: any[]): PropertyDecorator {
   return function (target: Object, prop: string | symbol): void {
     let injects: { [key: string | symbol]: InjectItem } = Reflect.getMetadata('smartdi:injects', target) || {};
     injects[prop] = { array: true, clue, args };
