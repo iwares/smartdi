@@ -107,10 +107,10 @@ export abstract class SmartDI {
 
     function isSubclass(sub: Function, sup: Function): boolean {
       let proto = Object.getPrototypeOf(sub);
-      while (proto.name) {
+      while (proto) {
         if (proto === sup)
           return true;
-        proto = Object.getPrototypeOf(sub);
+        proto = Object.getPrototypeOf(proto);
       }
       return false;
     }
