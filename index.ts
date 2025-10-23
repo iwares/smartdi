@@ -35,12 +35,33 @@ type InjectItem = InjectItemObject | InjectItemArray;
 
 export abstract class SmartDI {
 
-  public static readonly [$registry]: { [key: string]: RegistryItem } = {};
+  private static readonly [$registry]: { [key: string]: RegistryItem } = {};
+
+  public static register<T>(clazz: Class<T>, options?: InjectableOptions): void {
+    const name = options?.name || clazz.name;
+    const args = options?.args || [];
+    const singleton = !options?.multiple;
+
+    if (SmartDI[$registry][name])
+      throw new Error(`Duplicated injectable name '${name}'!`);
+
+    SmartDI[$registry][name] = {
+      name,
+      class: clazz,
+      args: args,
+      singleton,
+      instance: undefined
+    };
+  }
 
   public static get<T>(clue: Class<T> | AbstractClass<T>, ...args: any[]): T;
   public static get<T>(name: string, ...args: any[]): T;
   public static get<T>(clue: Class<T> | AbstractClass<T> | string, ...args: any[]): T {
     return SmartDI.internalGet(clue, new Set(), ...args);
+  }
+
+  public static getArray<T>(clue: Class<T> | AbstractClass<T>, ...args: any[]): T[] {
+    return SmartDI.internalGetArray(clue, new Set(), ...args);
   }
 
   private static internalGet<T>(clue: Class<T> | AbstractClass<T> | string, creatings: Set<string>, ...args: any[]): T {
@@ -63,7 +84,7 @@ export abstract class SmartDI {
     return SmartDI.obtainInstance(item, creatings, ...args);
   }
 
-  private static internalGetArray<T>(constructor: Class<T>, creatings: Set<string>, ...args: any[]): T[] {
+  private static internalGetArray<T>(constructor: Class<T> | AbstractClass<T>, creatings: Set<string>, ...args: any[]): T[] {
     const items = SmartDI.resovleByConstructor(constructor);
 
     if (items.length == 0)
@@ -136,20 +157,7 @@ export abstract class SmartDI {
 
 export function Injectable(options?: InjectableOptions): ClassDecorator {
   return (target: Function) => {
-    const name = options?.name || target.name;
-    const args = options?.args || [];
-    const singleton = !options?.multiple;
-
-    if (SmartDI[$registry][name])
-      throw new Error(`Duplicated injectable name '${name}'!`);
-
-    SmartDI[$registry][name] = {
-      name,
-      class: target as Class<any>,
-      args: args,
-      singleton,
-      instance: undefined
-    };
+    SmartDI.register(target as Class<any>, options);
   }
 }
 
