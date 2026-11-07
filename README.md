@@ -232,6 +232,17 @@ Decorate a method as a lifecycle hook, which will be invoked when `SmartDI.initi
 Decorate a method as a lifecycle hook, which will be invoked when `SmartDI.uninitialize()` is called.
 将方法装饰为生命周期钩子，在调用 `SmartDI.uninitialize()` 时执行。
 
+## Inheritance | 继承
+
+Injected properties and lifecycle hooks declared on base classes apply to subclass instances. Decorators write only the metadata of the class they decorate; the prototype chain is merged when an instance is created.
+
+基类声明的注入属性与生命周期钩子会对子类实例生效。装饰器只写入所在类自己的元数据，实例创建时再沿原型链合并。
+
+- Injected properties are merged base-first, so a subclass property with the same name overrides the base one.
+  注入属性按基类在前合并，子类同名字段覆盖基类字段。
+- `@PostConstruct` / `@PreDestroy` methods run once per instance, base-class hooks first.
+  每个实例的 `@PostConstruct` / `@PreDestroy` 各执行一次，基类钩子在前。
+
 ## Limitations
 
 Injection is processed after construction, so do not access injectable values in the constructor.
