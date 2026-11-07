@@ -13,6 +13,13 @@ class RegisteredBase {
 class RegisteredChild extends RegisteredBase {
 }
 
+class UnregisteredBase {
+}
+
+@Injectable({ name: 'test:only-child', multiple: true })
+class OnlyChild extends UnregisteredBase {
+}
+
 describe('按类解析', () => {
   // Given: Renamed 以自定义名称 test:renamed 注册
   // When:  以类本身作为 clue 调用 SmartDI.get
@@ -38,5 +45,12 @@ describe('按类解析', () => {
 
     expect(instances).toHaveLength(1);
     expect(instances[0]).toBeInstanceOf(RegisteredChild);
+  });
+
+  // Given: UnregisteredBase 未注册，其唯一子类 OnlyChild 已注册
+  // When:  以 UnregisteredBase 作为 clue 调用 SmartDI.get
+  // Then:  回退到唯一匹配的子类实例
+  it('基类未注册时按唯一子类解析', () => {
+    expect(SmartDI.get(UnregisteredBase)).toBeInstanceOf(OnlyChild);
   });
 });
